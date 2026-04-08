@@ -40,68 +40,70 @@ func getBracketsIndices(stringContent string) [][]int {
 	bracketsRegex := regexp.MustCompile(`\{|\}|\[|\]`)
 	bracketsIndices := bracketsRegex.FindAllStringIndex(stringContent, -1)
 	if len(bracketsIndices) > 0 {
-		bracketsIndices = removeBracketsThatAreInStrings(stringContent, bracketsIndices)
+		bracketsIndices = excludeBracketsThatAreInStrings(stringContent, bracketsIndices)
 	}
 	return bracketsIndices
 }
 
 func handleInnerBrackets(innerString string, bracketsIndices [][]int) error {
-	OpenningBracketsIndexes := make([]int, 0)
+	OpenningBracketsIndices := make([]int, 0)
 	for k := range bracketsIndices {
 		if k != 0 && k != len(bracketsIndices)-1 {
 			value := innerString[bracketsIndices[k][0]:bracketsIndices[k][1]]
 			if value == "[" || value == "{" {
-				OpenningBracketsIndexes = append(OpenningBracketsIndexes, bracketsIndices[k][0])
+				OpenningBracketsIndices = append(OpenningBracketsIndices, bracketsIndices[k][0])
 			} else { // ] or }
-				if len(OpenningBracketsIndexes) > 0 {
-					starting := OpenningBracketsIndexes[len(OpenningBracketsIndexes)-1]
+				if len(OpenningBracketsIndices) > 0 {
+					starting := OpenningBracketsIndices[len(OpenningBracketsIndices)-1]
 					ending := bracketsIndices[k][1]
 					innerObjectOrArray := innerString[starting:ending]
 					if !validJSONregex.MatchString(innerObjectOrArray) {
 						return errors.New(produceAReasonForInvalidation(innerObjectOrArray))
 					}
-					OpenningBracketsIndexes = OpenningBracketsIndexes[:len(OpenningBracketsIndexes)-1]
+					OpenningBracketsIndices = OpenningBracketsIndices[:len(OpenningBracketsIndices)-1]
 				} else {
 					return errors.New("This is an invalid JSON\nThere are ([{)s that are fewer than (]})s")
 				}
 			}
 		}
 	}
-	if len(OpenningBracketsIndexes) > 0 {
+	if len(OpenningBracketsIndices) > 0 {
 		return errors.New("This is an invalid JSON\nThere are ([{)s that are more than (]})s")
 	}
 	return nil
 }
 
-func removeBracketsThatAreInStrings(innerString string, indices [][]int) [][]int {
+func excludeBracketsThatAreInStrings(innerString string, bracketsIndices [][]int) [][]int {
 	stringValuesRegex := regexp.MustCompile(strinG)
 	stringValuesIndices := stringValuesRegex.FindAllStringIndex(innerString, -1)
 	if len(stringValuesIndices) > 0 {
-		if indices[len(indices)-1][1] < stringValuesIndices[0][0] ||
-			indices[0][0] > stringValuesIndices[len(stringValuesIndices)-1][1] {
-			return indices
+		if bracketsIndices[len(bracketsIndices)-1][1] < stringValuesIndices[0][0] ||
+			bracketsIndices[0][0] > stringValuesIndices[len(stringValuesIndices)-1][1] {
+			return bracketsIndices
 		}
 		var revisedIndices [][]int = make([][]int, 0)
-		for _, v := range indices {
-			low := 0
+		lowestStringIndex := 0
+		for _, bracketIndex := range bracketsIndices {
+			low := lowestStringIndex
 			high := len(stringValuesIndices) - 1
 			middle := (low + high) / 2
-			for !(v[0] > stringValuesIndices[middle][0] && v[1] < stringValuesIndices[middle][1]) &&
+			for !(bracketIndex[0] > stringValuesIndices[middle][0] && bracketIndex[1] < stringValuesIndices[middle][1]) &&
 				high >= low {
-				if v[0] > stringValuesIndices[middle][1] {
+				if bracketIndex[0] > stringValuesIndices[middle][1] {
 					low = middle + 1
+					lowestStringIndex = middle + 1
 				} else {
 					high = middle - 1
 				}
 				middle = (low + high) / 2
 			}
-			if !(v[0] > stringValuesIndices[middle][0] && v[1] < stringValuesIndices[middle][1]) {
-				revisedIndices = append(revisedIndices, v)
+			if !(bracketIndex[0] > stringValuesIndices[middle][0] && bracketIndex[1] < stringValuesIndices[middle][1]) {
+				revisedIndices = append(revisedIndices, bracketIndex)
 			}
 		}
 		return revisedIndices
 	}
-	return indices
+	return bracketsIndices
 }
 
 func produceAReasonForInvalidation(fileContentString string) string {
