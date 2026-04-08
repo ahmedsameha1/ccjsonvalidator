@@ -6,19 +6,20 @@ import (
 )
 
 const (
-	strinG                               string = `"([^"\n\t\\]*?(\\"|\\\t|\\\\|\\b|\\f|\\n|\\r|\\t|\\/|\\u)+[^"\n\t\\]*?)+"|"[^"\n\t\\]*"`
-	number                               string = `-?\d{1}\.\d+([eE][-+]?)\d+|-?[1-9]\d+\.\d+([eE][-+]?)\d+|-?[1-9]\d*([eE][-+]?)\d+|-?\d{1}\.\d+|-?[1-9]\d+\.\d+|-?[1-9]\d*|-?0([eE][-+]?\d+){0,1}`
-	innerBrackets                        string = `\[[^][]*\]|{[^}{]*}|\[.*\[.*\].*\]|\{.*\{.*\}.*\}`
-	stringValues                         string = `|` + strinG + `|`
-	innerElement                         string = `\s*(null|true|false|` + number + stringValues + innerBrackets + `){1}`
-	lastElementInOuterSqurareBrackets    string = `(` + innerElement + `\s*)`
-	multipleElmentsInOuterSquareBrackets string = `(` + innerElement + `\s*,\s*)*`
-	outerSquareBrackets                  string = `\[\s*(` + multipleElmentsInOuterSquareBrackets + lastElementInOuterSqurareBrackets + `{1}){0,1}\]`
-	objectKey                            string = `(` + strinG + `)`
-	lastElementInOuterCurlyBrackets      string = `(\s*` + objectKey + `\s*:` + innerElement + `\s*)`
-	multipleElmentsInOuterCurlyBrackets  string = `(\s*` + objectKey + `\s*:` + innerElement + `\s*,\s*)*`
-	outerCurlyBrakets                    string = `{\s*(` + multipleElmentsInOuterCurlyBrackets + lastElementInOuterCurlyBrackets + `{1}){0,1}}`
-	validJSONPattern                     string = `(?s)\A\s*(` + strinG + `|` + number + `|false|null|true|` + outerSquareBrackets + `|` +
+	literals                              string = `null|true|false`
+	strinG                                string = `"([^"\n\t\\]*?(\\"|\\\t|\\\\|\\b|\\f|\\n|\\r|\\t|\\/|\\u)+[^"\n\t\\]*?)+"|"[^"\n\t\\]*"`
+	number                                string = `-?\d{1}\.\d+([eE][-+]?)\d+|-?[1-9]\d+\.\d+([eE][-+]?)\d+|-?[1-9]\d*([eE][-+]?)\d+|-?\d{1}\.\d+|-?[1-9]\d+\.\d+|-?[1-9]\d*|-?0([eE][-+]?\d+){0,1}`
+	innerBrackets                         string = `\[[^][]*\]|{[^}{]*}|\[.*\[.*\].*\]|\{.*\{.*\}.*\}`
+	stringValues                          string = `|` + strinG + `|`
+	innerElement                          string = `\s*(` + literals + `|` + number + stringValues + innerBrackets + `){1}`
+	lastElementInOuterSqurareBrackets     string = `(` + innerElement + `\s*)`
+	multipleElementsInOuterSquareBrackets string = `(` + innerElement + `\s*,\s*)*`
+	outerSquareBrackets                   string = `\[\s*(` + multipleElementsInOuterSquareBrackets + lastElementInOuterSqurareBrackets + `{1}){0,1}\]`
+	objectKey                             string = `(` + strinG + `)`
+	lastElementInOuterCurlyBrackets       string = `(\s*` + objectKey + `\s*:` + innerElement + `\s*)`
+	multipleElementsInOuterCurlyBrackets  string = `(\s*` + objectKey + `\s*:` + innerElement + `\s*,\s*)*`
+	outerCurlyBrakets                     string = `{\s*(` + multipleElementsInOuterCurlyBrackets + lastElementInOuterCurlyBrackets + `{1}){0,1}}`
+	validJSONPattern                      string = `(?s)\A\s*(` + strinG + `|` + number + `|` + literals + `|` + outerSquareBrackets + `|` +
 		outerCurlyBrakets + `){1}\s*\z`
 )
 
